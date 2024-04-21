@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Node.js Quiz</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 0;
+      padding: 0;
+      background-color: #f7f7f7;
+    }
+    .container {
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 20px;
+      background-color: #fff;
+      border-radius: 8px;
+      box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+    }
+
+    h1 {
+      text-align: center;
+      color: #333;
+    }
+
+    form {
+      margin-bottom: 20px;
+    }
+
+    p {
+      margin-bottom: 10px;
+      font-size: 18px;
+      color: #333;
+    }
+
+    label {
+      display: block;
+      margin-bottom: 10px;
+    }
+
+    input[type="radio"] {
+      margin-right: 5px;
+    }
+
+    button[type="submit"] {
+      padding: 10px 20px;
+      background-color: #007bff;
+      color: #fff;
+      border: none;
+      border-radius: 5px;
+      /* margin-left: 92; */
+      cursor: pointer;
+    }
+
+    button[type="submit"]:hover {
+      background-color: #0056b3;
+    }
+
+    #feedback {
+      font-size: 16px;
+      color: #333;
+    }
+
+    #feedback ul {
+      list-style-type: none;
+      padding: 0;
+    }
+
+    #feedback li {
+      margin-bottom: 5px;
+    }
+
+    #feedback .correct {
+      color: green;
+    }
+
+    #feedback .incorrect {
+      color: red;
+    }
+    .but1{
+      margin: 0;
+      padding: 0;
+      display: flex;
+      justify-content: center; /* Center horizontally */
+      align-items: center; /* Center vertically */
+      /* height: 100vh; */
+    }
+    /* .submit{
+      justify-content: center;
+      align-items: center;
+      background-color: aqua;
+    } */
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Node.js Quiz</h1>
+    <form id="form1"> 
+      <div id="quizForm" >  </div>
+      <div class="but1">
+      <button type="submit" class="submit">Submit Quiz</button></div>
+    </form>
+    <div id="feedback"></div>
+  </div>
+<!-- 
+  <div class="container">
+    <h1>Node.js Quiz</h1>
+    <form id="quizForm">
+      <button type="submit" id="submitQuiz">Submit Quiz</button>
+    </form>
+    <div id="feedback"></div>
+  </div> -->
+<!-- 
+  <h2 id="question"></h2>
+  <div class="choice-container">
+    <p class="choice-prefix">A</p>
+    <p class="choice-text" data-number="1"></p>
+  </div>
+  <div class="choice-container">
+    <p class="choice-prefix">B</p>
+    <p class="choice-text" data-number="2"></p>
+  </div>
+  <div class="choice-container">
+    <p class="choice-prefix">C</p>
+    <p class="choice-text" data-number="3"></p>
+  </div>
+  <div class="choice-container">
+    <p class="choice-prefix">D</p>
+    <p class="choice-text" data-number="4"></p>
+  </div>
+   -->
+  
+
+  <script src="https://unpkg.com/axios/dist/axios.min.js"></script>
+  <script>
+    // Fetch quiz questions from server and render them dynamically
+    axios.get('http://localhost:3000/quiz')
+      .then(response => {
+        const fetchedQuestions = response.data.questions;
+        const form = document.getElementById('quizForm');
+        const submission=document.getElementById('form1');
+        const feedbackDiv = document.getElementById('feedback');
+
+        fetchedQuestions.forEach((q, index) => {
+          const questionDiv = document.createElement('div');
+          questionDiv.innerHTML = `
+            <p>${q.question}</p>
+            ${q.options.map((option, i) => `
+              <label>
+                <input type="radio" name="answer${index}" value="${i}">
+                ${option}
+              </label>
+            `).join('')}
+          `;
+          form.appendChild(questionDiv);
+        });
+        // Select the radio inputs
+// const radioInputs = document.querySelectorAll('input[type="radio"]');
+
+// // Loop through each radio input and add event listener
+// radioInputs.forEach(radioInput => {
+//     radioInput.addEventListener('change', function(event) {
+//         // Handle the change event
+//         console.log('Selected radio value:', event.target);
+//         var val=event.target.value;
+//         var name=event.target.name;
+//         var id=name.slice(6);
+//         console.log(fetchedQuestions[id].question);
+         
+//         console.log(document.getElementsByName(name)[0].value);
+//         if(fetchedQuestions[id].correctAnswer == val+1){
+//           console.log(document.getElementsByName(name)[val].value.style);
+//           document.getElementsByName(name)[val].value.style.color = 'green';
+//         }
+        
+//         else{
+//           const d=document.getElementsByName(name)[val].value;
+//           console.log(d.style);
+//           document.getElementsByName(name)[val].value.style.color ='red';
+//           return;
+//         }
+//     });
+// });
+
+        // Add event listener to the form submission
+        submission.addEventListener('submit', async (event) => {
+          event.preventDefault();
+          console.log(event);
+          const formData = new FormData(submission);
+          const answers = Array.from(formData.values()).map(Number);
+
+          const response = await axios.post('http://localhost:3000/quiz/submit', answers);
+          const { score, feedback } = response.data;
+
+          feedbackDiv.innerHTML = `
+            <h2>Score: ${score}</h2>
+            <h3>Feedback:</h3>
+            <ul>
+              ${feedback.map(f => `
+                <li>
+                  <p>${f.question}</p>
+                 <p>  "Your Answer : " ${f.correct ? 'Correct' : 'Incorrect'} </p>
+                   <p>"Correct answer : " ${f.correctAnswer}</p>
+                </li>
+              `).join('')}
+            </ul>
+          `;
+        });
+      })
+      .catch(error => console.error('Error fetching quiz:', error));
+  </script>
+</body>
+</html>
